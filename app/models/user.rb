@@ -51,13 +51,19 @@ class User < ApplicationRecord
     # Sets password reset attributes
     def create_reset_digest
         self.reset_token = User.new_token
-        update_attribute(:reset_token, User.digest(reset_token))
-        update_attribute(:reset_sent_at, Time.zone.now)
+        update_columns(reset_digest: User.digest(reset_token),
+        reset_sent_at: Time.zone.now)
     end
     
     # Sends password reset email
     def send_password_reset_email
        UserMailer.password_reset(self).deliver_now 
+    end
+    
+    # Returns true if password reset has expired
+    # < represents 'earlier than' in this case
+    def password_reset_expired?
+        reset_sent_at < 2.hours.ago
     end
     
     private
